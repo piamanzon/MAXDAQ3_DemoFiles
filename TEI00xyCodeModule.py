@@ -13,6 +13,7 @@ from scipy.fftpack import fft # FFT
 import numpy as np # FFT window function generating data
 from matplotlib import pyplot as plt  # Plotting of Graphs
 import pandas as pd
+import time
 
 def downloadData(adcData):
     data = {'Time (ms)':adcData[0],'ADC Voltage (V)':adcData[1]}
@@ -51,6 +52,7 @@ def sendCommand(comport, command):
 def dataCollect(comport, samples, target):
     # Function variables
     adcSamples = 16384
+    #import time
     adcByteList = 0
     adcSignalVolt = []    
     adcSignalFloatNormalized = []
@@ -60,22 +62,25 @@ def dataCollect(comport, samples, target):
     handleComport.reset_output_buffer()
     handleComport.write(bytearray("t",'utf8')) # Trigger the adc   
     # Collect the data
-    for i in range(1, samples, 16):
-        try:
-            handleComport.reset_input_buffer()
-            handleComport.write(bytearray("*",'utf8')) # Read 16384 adc values 
-            if target == 1: # Select the module according to target
-                adcByteList = handleComport.read(5*adcSamples)
-                dataConvertTEI0015(adcByteList, adcSamples, adcSignalVolt, adcSignalFloatNormalized, adcSignedInteger)
-            elif target == 2 or target == 3:
-                adcByteList = handleComport.read(4*adcSamples)
-                dataConvertTEI0016(adcByteList, adcSamples, adcSignalVolt, adcSignalFloatNormalized, adcSignedInteger)
-            elif target == 4:
-                adcByteList = handleComport.read(5*adcSamples)
-                dataConvertTEI0023(adcByteList, adcSamples, adcSignalVolt, adcSignalFloatNormalized, adcSignedInteger)
-            adcByteList = 0
-        except:
-            print("ADC data not aquired, stored or processed")
+    t_end = time.time() + 3
+        
+    while time.time() < t_end:
+        for i in range(1, samples, 16):
+            try:
+                handleComport.reset_input_buffer()
+                handleComport.write(bytearray("*",'utf8')) # Read 16384 adc values 
+                if target == 1: # Select the module according to target
+                    adcByteList = handleComport.read(5*adcSamples)
+                    dataConvertTEI0015(adcByteList, adcSamples, adcSignalVolt, adcSignalFloatNormalized, adcSignedInteger)
+                elif target == 2 or target == 3:
+                    adcByteList = handleComport.read(4*adcSamples)
+                    dataConvertTEI0016(adcByteList, adcSamples, adcSignalVolt, adcSignalFloatNormalized, adcSignedInteger)
+                elif target == 4:
+                    adcByteList = handleComport.read(5*adcSamples)
+                    dataConvertTEI0023(adcByteList, adcSamples, adcSignalVolt, adcSignalFloatNormalized, adcSignedInteger)
+                adcByteList = 0
+            except:
+                print("ADC data not aquired, stored or processed")
     handleComport.close()
     
     return [adcSignalVolt, adcSignalFloatNormalized, adcSignedInteger]
@@ -150,15 +155,32 @@ def performeFFTdbFS(samplerate, signal):
 
 # Plot the graphs
 def plottingGraphs(mode, labelPlot, labelAxisX, labelAxisY, plotData, axisLimits):
-    fig = plt.figure()
-    plt.axes().grid(True)
-    fig.suptitle(labelPlot, fontsize='13', fontweight='bold')
-    plt.xlabel(labelAxisX)      
-    plt.ylabel(labelAxisY)
-    plt.plot(plotData[0], plotData[1])
-    plt.ylim(axisLimits[2],axisLimits[3])    
-    if mode == 0:        
-        plt.xlim(axisLimits[0],axisLimits[1])
+    if(len(plotData) == 2):
+        fig = plt.figure()
+        plt.axes().grid(True)
+        fig.suptitle(labelPlot, fontsize='13', fontweight='bold')
+        plt.xlabel(labelAxisX)      
+        plt.ylabel(labelAxisY)
+        plt.plot(plotData[0], plotData[1])
+        plt.ylim(axisLimits[2],axisLimits[3])    
+        if mode == 0:        
+            plt.xlim(axisLimits[0],axisLimits[1])
+    else:
+        fig = plt.figure()
+        plt.axes().grid(True)
+        fig.suptitle(labelPlot, fontsize='13', fontweight='bold')
+        plt.xlabel(labelAxisX)      
+        plt.ylabel(labelAxisY)
+        plt.plot(plotData[0], plotData[1], label="Received")
+    #    fig.show()
+        plt.plot(plotData[0], plotData[2], label="Reference")
+        plt.plot(plotData[0], plotData[3], label="Mixed")
+        plt.plot(plotData[0], plotData[4], label="Mean")
+        plt.legend()
+        plt.ylim(axisLimits[2],axisLimits[3])    
+        if mode == 0:        
+            plt.xlim(axisLimits[0],axisLimits[1])
+        
     fig.show()
     return fig
     
