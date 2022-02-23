@@ -62,25 +62,25 @@ def dataCollect(comport, samples, target):
     handleComport.reset_output_buffer()
     handleComport.write(bytearray("t",'utf8')) # Trigger the adc   
     # Collect the data
-    t_end = time.time() + 3
+ #   t_end = time.time() + 3
         
-    while time.time() < t_end:
-        for i in range(1, samples, 16):
-            try:
-                handleComport.reset_input_buffer()
-                handleComport.write(bytearray("*",'utf8')) # Read 16384 adc values 
-                if target == 1: # Select the module according to target
-                    adcByteList = handleComport.read(5*adcSamples)
-                    dataConvertTEI0015(adcByteList, adcSamples, adcSignalVolt, adcSignalFloatNormalized, adcSignedInteger)
-                elif target == 2 or target == 3:
-                    adcByteList = handleComport.read(4*adcSamples)
-                    dataConvertTEI0016(adcByteList, adcSamples, adcSignalVolt, adcSignalFloatNormalized, adcSignedInteger)
-                elif target == 4:
-                    adcByteList = handleComport.read(5*adcSamples)
-                    dataConvertTEI0023(adcByteList, adcSamples, adcSignalVolt, adcSignalFloatNormalized, adcSignedInteger)
-                adcByteList = 0
-            except:
-                print("ADC data not aquired, stored or processed")
+ #   while time.time() < t_end:
+    for i in range(1, samples, 16):
+        try:
+            handleComport.reset_input_buffer()
+            handleComport.write(bytearray("*",'utf8')) # Read 16384 adc values 
+            if target == 1: # Select the module according to target
+                adcByteList = handleComport.read(5*adcSamples)
+                dataConvertTEI0015(adcByteList, adcSamples, adcSignalVolt, adcSignalFloatNormalized, adcSignedInteger)
+            elif target == 2 or target == 3:
+                adcByteList = handleComport.read(4*adcSamples)
+                dataConvertTEI0016(adcByteList, adcSamples, adcSignalVolt, adcSignalFloatNormalized, adcSignedInteger)
+            elif target == 4:
+                adcByteList = handleComport.read(5*adcSamples)
+                dataConvertTEI0023(adcByteList, adcSamples, adcSignalVolt, adcSignalFloatNormalized, adcSignedInteger)
+            adcByteList = 0
+        except:
+            print("ADC data not aquired, stored or processed")
     handleComport.close()
     
     return [adcSignalVolt, adcSignalFloatNormalized, adcSignedInteger]
