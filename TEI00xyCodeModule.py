@@ -15,12 +15,26 @@ from matplotlib import pyplot as plt  # Plotting of Graphs
 import pandas as pd
 import time
 
+
+
+
+
 def downloadData(adcData):
     data = {'Time (ms)':adcData[0],'ADC Voltage (V)':adcData[1]}
     df = pd.DataFrame(data=data)
-    df.to_excel(r'C:\Users\phia_\Documents\Capstone\AnalogDAQ3\VoltageData.xlsx', index = False)
+    todaysDate = time.strftime("%d-%m-%Y")
+    excelfilename = todaysDate + " Input Voltage (" + adcData[2] + ") " +".xlsx"
+   # df.to_excel(r'C:\Users\phia_\Documents\Capstone\AnalogDAQ3\VoltageData' + adcData[2] + '.xlsx', index = False)
+    df.to_excel(excelfilename, index = False)
    
 
+def downloadLIAData(adcData):
+    data = {'Channels':adcData[0],'Magnitude (V)':adcData[1], 'Phase (rad)' :adcData[2]}
+    df = pd.DataFrame(data=data)
+    todaysDate = time.strftime("%d-%m-%Y")
+    excelfilename = todaysDate + " LIA Output (" + adcData[3] + ") " +".xlsx"
+   # df.to_excel(r'C:\Users\phia_\Documents\Capstone\AnalogDAQ3\VoltageData' + adcData[2] + '.xlsx', index = False)
+    df.to_excel(excelfilename, index = False)
 
 def getModuleId(comport):
     moduleId = 0 # Default error value
@@ -123,10 +137,15 @@ def dataConvertTEI0023(adcByteList, adcSamples, adcSignalVolt, adcSignalFloatNor
         # ADC resolution is 18bit, positive values reach from 0 to 131071, 
         # negatives values from 131072 to 262142        
         adcIntRaw = int(adcByteList[adcSingleValue:adcSingleValue+5], 16)
+        #adcIntRaw = int(adcByteList[adcSingleValue:adcSingleValue+5], 5)
         if adcIntRaw > 131071:
+        #if adcIntRaw > 65:
             adcIntRaw = int(adcIntRaw - 262142)
+            #adcIntRaw = int(adcIntRaw - 130)
         adcSignalVolt.append(float(adcIntRaw)*(2*5.0*1/0.45)/262142) # (2*Vref*ADCgain) / 2*maxInt 149
+        #adcSignalVolt.append(float(adcIntRaw)*(2*5.0*1/0.45)/130) # (2*Vref*ADCgain) / 2*maxInt 149
         adcSignalFloatNormalized.append(adcIntRaw/131071)
+        #adcSignalFloatNormalized.append(adcIntRaw/65)
         adcSignedInteger.append(adcIntRaw)
         
     
